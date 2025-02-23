@@ -2,39 +2,50 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-
 public class MovimientoPersonaje : MonoBehaviour
 {
-    public float velocidad = 5f;
-    public float Fuerzasalto = 5f;
-    private Rigidbody rb;
-    private bool esSuelo;
+    public float horizontalMove;
+    public float verticalMove;
+    public CharacterController Player;
+    public float speed;
+
+    public float gravity = 9.81f;
+    private float verticalVelocity;
+    public float jumpForce = 5f;
 
     void Start()
     {
-        rb = GetComponent<Rigidbody>();
+        Player = GetComponent<CharacterController>();
     }
 
     void Update()
     {
-        float moveX = Input.GetAxis("Horizontal") * velocidad;
-        float moveZ = Input.GetAxis("Vertical") * velocidad;
-
-        Vector3 movement = new Vector3(moveX, 0f, moveZ);
-        rb.velocity = new Vector3(movement.x, rb.velocity.y, movement.z);
-
-        if (Input.GetButtonDown("Jump") && esSuelo)
+        if (Player.isGrounded)
         {
-            rb.AddForce(Vector3.up * Fuerzasalto, ForceMode.Impulse);
-            esSuelo = false;
+            if (verticalVelocity < 0) 
+            {
+                verticalVelocity = -0.5f; 
+            }
+
+            if (Input.GetButtonDown("Jump"))
+            {
+                verticalVelocity = jumpForce;
+            }
         }
+        else
+        {
+            verticalVelocity -= gravity * Time.deltaTime;
+        }
+
+        horizontalMove = Input.GetAxis("Horizontal");
+        verticalMove = Input.GetAxis("Vertical");
     }
 
-    void OnCollisionEnter(Collision collision)
+    private void FixedUpdate()
     {
-        if (collision.gameObject.CompareTag("Suelo"))
-        {
-            esSuelo = true;
-        }
+        Vector3 move = new Vector3(horizontalMove, 0, verticalMove) * speed;
+        move.y = verticalVelocity; 
+        Player.Move(move * Time.deltaTime);
     }
 }
+
